@@ -48,6 +48,7 @@ void exposeResidualFrameRotation();
 void exposeResidualFrameTranslation();
 void exposeResidualFrameVelocity();
 void exposeResidualImpulseCoM();
+void exposeResidualObstacleAvoidance();
 
 #ifdef PINOCCHIO_WITH_HPP_FCL
 void exposeResidualPairCollision();

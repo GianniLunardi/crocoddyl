@@ -45,6 +45,7 @@ void exposeMultibody() {
   exposeResidualFrameTranslation();
   exposeResidualFrameVelocity();
   exposeResidualImpulseCoM();
+  exposeResidualObstacleAvoidance();
 
 #ifdef PINOCCHIO_WITH_HPP_FCL
   exposeResidualPairCollision();
