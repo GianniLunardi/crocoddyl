@@ -34,7 +34,6 @@ void ResidualModelObstacleAvoidanceTpl<Scalar>::calc(const boost::shared_ptr<Res
                                                      const Eigen::Ref<const VectorXs> &x,
                                                      const Eigen::Ref<const VectorXs> &) {
     Data* d = static_cast<Data*>(data.get());
-    const Eigen::IOFormat HeavyFmt(Eigen::FullPrecision, 0, ", ", ";\n", "[", "]", "[", "]");
 
     pinocchio::forwardKinematics(pin_model_, *d->pinocchio, x.head(nq_), x.tail(nv_));
     // Compute the distance for the collision pair
@@ -44,7 +43,6 @@ void ResidualModelObstacleAvoidanceTpl<Scalar>::calc(const boost::shared_ptr<Res
     d->p_diff = d->geometry.distanceResults[pair_id_].nearest_points[0] -
                 d->geometry.distanceResults[pair_id_].nearest_points[1];
     d->dist = d->p_diff.norm();
-    //std::cout << "p_diff = \n" << d->p_diff.format(HeavyFmt) << std::endl;
     // Compute the velocity of the foot
     d->v = (pinocchio::getFrameVelocity(pin_model_, *d->pinocchio, frame_id_, type_)).toVector();
     // Compute the residual
@@ -56,7 +54,6 @@ void ResidualModelObstacleAvoidanceTpl<Scalar>::calc(const boost::shared_ptr<Res
         d->r[0] = std::pow(d->v[0], 2) / beta_;
         d->r[1] = std::pow(d->v[1], 2) / beta_;
     }
-    //std::cout << "r = \n" << d->r.format(HeavyFmt) << std::endl;
 }
 
 template <typename Scalar>
@@ -69,7 +66,6 @@ void ResidualModelObstacleAvoidanceTpl<Scalar>::calcDiff(const boost::shared_ptr
     // Compute the frame Jacobian, consider the first three rows (derivatives wrt the position of the frame)
     pinocchio::getFrameJacobian(pin_model_, *d->pinocchio, frame_id_, type_, d->J);
     Matrix3xs p_diff_der = d->J.template topRows<3>();
-    //std::cout << "p_diff_der = \n" << p_diff_der.format(HeavyFmt) << std::endl;
 
     // Compute the derivatives of the foot's velocity
     pinocchio::getFrameVelocityDerivatives(pin_model_, *d->pinocchio, frame_id_, type_,
@@ -79,28 +75,21 @@ void ResidualModelObstacleAvoidanceTpl<Scalar>::calcDiff(const boost::shared_ptr
     Matrix6xs dv0_dx(Matrix6xs::Zero(6, state_->get_ndx()));
     pinocchio::getFrameVelocityDerivatives(pin_model_, *d->pinocchio, frame_id_, pinocchio::WORLD,
                                            dv0_dx.leftCols(nv_), dv0_dx.rightCols(nv_));
-    //std::cout << "dv0_dx = \n" << dv0_dx.format(HeavyFmt) << std::endl;
 
     Vector3s p = d->pinocchio->oMf[frame_id_].translation();
     Vector3s omega = d->v.tail(3);
-    //std::cout << "p = " << p.format(HeavyFmt) << ", omega = " << omega.format(HeavyFmt) << std::endl;
     Matrix3s p_skew = pinocchio::skew(p);
     Matrix3s omega_skew = pinocchio::skew(omega);
-//    std::cout << "prod 1:\n" << (p_skew * dv0_dx.bottomLeftCorner(3, nv_)).format(HeavyFmt) << "\n" <<
-//                 "prod 2:\n" << (omega_skew * p_diff_der).format(HeavyFmt) << std::endl;
     d->dv_dx.topLeftCorner(3, nv_) = dv0_dx.topLeftCorner(3, nv_) - p_skew * dv0_dx.bottomLeftCorner(3, nv_) +
                                      omega_skew * p_diff_der;
-    //std::cout << "dv_dx = \n" << d->dv_dx.format(HeavyFmt) << std::endl;
     // Compute the residual Jacobian, considering the two cases
     if(d->geometry.distanceResults[pair_id_].min_distance > 0) {
         // 1) min dist > 0 --> compute the complete derivatives of the residual
         VectorXs norm_der = d->p_diff / d->dist;
-        //std::cout << "norm_der = \n" << norm_der.format(HeavyFmt) << std::endl;
         VectorXs dist_der_dq = norm_der.transpose() * p_diff_der;
         VectorXs dist_der_dv(VectorXs::Zero(nv_, 1));
         VectorXs dist_der(dist_der_dq.size() + dist_der_dv.size());
         dist_der << dist_der_dq, dist_der_dv;
-        //std::cout << "dist_der = \n" << dist_der.format(HeavyFmt) << std::endl;
 
         // Chain rule
         for(size_t i = 0; i < nr_; i++) {
@@ -117,7 +106,6 @@ void ResidualModelObstacleAvoidanceTpl<Scalar>::calcDiff(const boost::shared_ptr
             }
         }
     }
-    //std::cout << "Rx = \n" << d->Rx.format(HeavyFmt) << std::endl;
 }
 
 template <typename Scalar>
