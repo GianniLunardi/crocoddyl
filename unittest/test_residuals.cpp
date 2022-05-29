@@ -195,7 +195,7 @@ void register_residual_model_unit_tests(ResidualModelTypes::Type residual_type, 
 bool init_function() {
   // Test all residuals available with all the activation types with all available states types.
   for (size_t residual_type = 0; residual_type < ResidualModelTypes::all.size(); ++residual_type) {
-    for (size_t state_type = StateModelTypes::all[StateModelTypes::StateMultibody_TalosArm];
+    for (size_t state_type = StateModelTypes::all[StateModelTypes::StateMultibody_Anymal];
          state_type < StateModelTypes::all.size(); ++state_type) {
       for (size_t actuation_type = 0; actuation_type < ActuationModelTypes::all.size(); ++actuation_type) {
         if (ActuationModelTypes::all[actuation_type] != ActuationModelTypes::ActuationModelMultiCopterBase) {
@@ -209,6 +209,11 @@ bool init_function() {
       }
     }
   }
+
+  // Test only for the new residual model obstacle avoidance
+//  register_residual_model_unit_tests(ResidualModelTypes::ResidualModelObstacleAvoidance,
+//                                       StateModelTypes::StateMultibody_Anymal,
+//                                       ActuationModelTypes::ActuationModelFloatingBase);
   return true;
 }
 
