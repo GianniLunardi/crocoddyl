@@ -7,6 +7,7 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 #include "residual.hpp"
+#include "pinocchio/multibody/geometry.hpp"
 #include "crocoddyl/multibody/residuals/state.hpp"
 #include "crocoddyl/core/residuals/control.hpp"
 #include "crocoddyl/multibody/residuals/com-position.hpp"
@@ -16,6 +17,8 @@
 #include "crocoddyl/multibody/residuals/frame-translation.hpp"
 #include "crocoddyl/multibody/residuals/frame-velocity.hpp"
 #include "crocoddyl/multibody/residuals/control-gravity.hpp"
+#include "crocoddyl/multibody/residuals/pair-collision.hpp"
+#include "crocoddyl/multibody/residuals/obstacle-avoidance.hpp"
 #include "crocoddyl/core/utils/exception.hpp"
 
 namespace crocoddyl {
@@ -52,6 +55,12 @@ std::ostream& operator<<(std::ostream& os, ResidualModelTypes::Type type) {
     case ResidualModelTypes::ResidualModelControlGrav:
       os << "ResidualModelControlGrav";
       break;
+    case ResidualModelTypes::ResidualModelPairCollision:
+      os << "ResidualModelPairCollision";
+      break;
+    case ResidualModelTypes::ResidualModelObstacleAvoidance:
+      os << "ResidualModelObstacleAvoidance";
+      break;
     case ResidualModelTypes::NbResidualModelTypes:
       os << "NbResidualModelTypes";
       break;
@@ -71,7 +80,26 @@ boost::shared_ptr<crocoddyl::ResidualModelAbstract> ResidualModelFactory::create
   boost::shared_ptr<crocoddyl::StateMultibody> state =
       boost::static_pointer_cast<crocoddyl::StateMultibody>(state_factory.create(state_type));
   pinocchio::FrameIndex frame_index = state->get_pinocchio()->frames.size() - 1;
+  // Fixed frame on lf foot
+  // pinocchio::FrameIndex frame_index = state->get_pinocchio()->getFrameId("LF_FOOT");
   pinocchio::SE3 frame_SE3 = pinocchio::SE3::Random();
+  // New part for the obstacle avoidance task
+  pinocchio::FrameIndex universeId = state->get_pinocchio()->getFrameId("universe");
+  boost::shared_ptr<pinocchio::GeometryModel> geomModel(new pinocchio::GeometryModel());
+
+  pinocchio::SE3 sphere_pos(pinocchio::SE3::Identity());
+  //sphere_pos.translation() = pinocchio::SE3::LinearType(2., 1., 0.5);
+  sphere_pos.translation() = state->get_pinocchio()->frames[frame_index].placement.translation();
+  pinocchio::SE3 box_pos(pinocchio::SE3::Identity());
+  box_pos.translation() = pinocchio::SE3::LinearType(0., 0., 0);
+
+  pinocchio::GeometryObject sphere("foot", frame_index, state->get_pinocchio()->frames[frame_index].parent, boost::shared_ptr<hpp::fcl::Sphere>(new hpp::fcl::Sphere(0)), sphere_pos);
+  pinocchio::GeometryObject box("obstacle", universeId, state->get_pinocchio()->frames[universeId].parent, boost::shared_ptr<hpp::fcl::Box>(new hpp::fcl::Box(0.1, 0.1, 0.1)), box_pos);
+  geomModel->addGeometryObject(sphere);
+  geomModel->addGeometryObject(box);
+  geomModel->addAllCollisionPairs();
+  const double beta = 1e-2;
+
   if (nu == std::numeric_limits<std::size_t>::max()) {
     nu = state->get_nv();
   }
@@ -106,6 +134,16 @@ boost::shared_ptr<crocoddyl::ResidualModelAbstract> ResidualModelFactory::create
       break;
     case ResidualModelTypes::ResidualModelControlGrav:
       residual = boost::make_shared<crocoddyl::ResidualModelControlGrav>(state, nu);
+      break;
+    case ResidualModelTypes::ResidualModelPairCollision:
+      residual = boost::make_shared<crocoddyl::ResidualModelPairCollision>(
+          state, nu, geomModel, 0, state->get_pinocchio()->frames[frame_index].parent
+          );
+      break;
+    case ResidualModelTypes::ResidualModelObstacleAvoidance:
+      residual = boost::make_shared<crocoddyl::ResidualModelObstacleAvoidance>(
+          state, nu, geomModel, 0, frame_index, pinocchio::LOCAL_WORLD_ALIGNED, beta
+          );
       break;
     default:
       throw_pretty(__FILE__ ": Wrong ResidualModelTypes::Type given");
