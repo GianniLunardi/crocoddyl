@@ -43,6 +43,9 @@ std::ostream& operator<<(std::ostream& os, PinocchioModelTypes::Type type) {
     case PinocchioModelTypes::RandomHumanoid:
       os << "RandomHumanoid";
       break;
+    case PinocchioModelTypes::Anymal:
+      os << "Anymal";
+      break;
     case PinocchioModelTypes::NbPinocchioModelTypes:
       os << "NbPinocchioModelTypes";
       break;
@@ -81,6 +84,12 @@ PinocchioModelFactory::PinocchioModelFactory(PinocchioModelTypes::Type type) {
       frame_id_ = model_->getFrameId(frame_name_);
       contact_nc_ = 6;
       break;
+    case PinocchioModelTypes::Anymal:
+      construct_model(EXAMPLE_ROBOT_DATA_MODEL_DIR "/anymal_b_simple_description/robots/anymal.urdf",
+                      EXAMPLE_ROBOT_DATA_MODEL_DIR "/anymal_b_simple_description/srdf/anymal.srdf");
+      frame_name_ = "LF_FOOT";
+      frame_id_ = model_->getFrameId(frame_name_);
+      contact_nc_ = 3;
     case PinocchioModelTypes::NbPinocchioModelTypes:
       break;
     default:
