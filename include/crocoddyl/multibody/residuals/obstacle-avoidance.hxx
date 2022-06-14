@@ -46,8 +46,9 @@ void ResidualModelObstacleAvoidanceTpl<Scalar>::calc(const boost::shared_ptr<Res
     // Compute the velocity of the foot
     d->v = (pinocchio::getFrameVelocity(pin_model_, *d->pinocchio, frame_id_, type_)).toVector();
     // Compute the residual
+
     if(d->geometry.distanceResults[pair_id_].min_distance > 0) {
-        d->r[0] = std::pow(d->v[0], 2) / (std::sqrt(d->dist) + beta_);
+        d->r[0] = std::pow(d->v[0], 2) / (std::sqrt(d->dist) + beta_); // usa la moltiplicazione, non pow
         d->r[1] = std::pow(d->v[1], 2) / (std::sqrt(d->dist) + beta_);
     }
     else {
@@ -89,13 +90,13 @@ void ResidualModelObstacleAvoidanceTpl<Scalar>::calcDiff(const boost::shared_ptr
         VectorXs dist_der_dq = norm_der.transpose() * p_diff_der;
         VectorXs dist_der_dv(VectorXs::Zero(nv_, 1));
         VectorXs dist_der(dist_der_dq.size() + dist_der_dv.size());
-        dist_der << dist_der_dq, dist_der_dv;
+        dist_der << dist_der_dq, dist_der_dv;    // definisci in data, poi aggiungi l'head con le derivate
 
         // Chain rule
         for(size_t i = 0; i < nr_; i++) {
             for(size_t j = 0; j < ndx_; j++) {
                 d->Rx(i,j) = - (std::pow(d->v[i], 2) * dist_der[j]) / (2 * std::pow((beta_ + std::sqrt(d->dist)), 2) * std::sqrt(d->dist)) +
-                                (2 * d->v[i] * d->dv_dx(i,j)) / (beta_ + std::sqrt(d->dist));
+                                (2 * d->v[i] * d->dv_dx(i,j)) / (beta_ + std::sqrt(d->dist));  // evita pow
             }
         }
     }
