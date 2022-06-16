@@ -3,8 +3,9 @@
 #include <pinocchio/algorithm/frames.hpp>
 #include <pinocchio/algorithm/kinematics-derivatives.hpp>
 #include <pinocchio/algorithm/frames-derivatives.hpp>
-#include <armadillo>
+//#include <armadillo>
 #include "crocoddyl/core/utils/exception.hpp"
+#include "crocoddyl/core/utils/stop-watch.hpp"
 #include "crocoddyl/multibody/residuals/obstacle-avoidance.hpp"
 
 
@@ -33,9 +34,9 @@ template <typename Scalar>
 void ResidualModelObstacleAvoidanceTpl<Scalar>::calc(const boost::shared_ptr<ResidualDataAbstract> &data,
                                                      const Eigen::Ref<const VectorXs> &x,
                                                      const Eigen::Ref<const VectorXs> &) {
+    START_PROFILER("ResidualModelObstacleAvoidance::calc");
     Data* d = static_cast<Data*>(data.get());
 
-    pinocchio::forwardKinematics(pin_model_, *d->pinocchio, x.head(nq_), x.tail(nv_));
     // Compute the distance for the collision pair
     pinocchio::updateGeometryPlacements(pin_model_, *d->pinocchio, *geom_model_.get(), d->geometry, x.head(nq_));
     pinocchio::computeDistance(*geom_model_.get(), d->geometry, pair_id_);
@@ -43,70 +44,61 @@ void ResidualModelObstacleAvoidanceTpl<Scalar>::calc(const boost::shared_ptr<Res
     d->p_diff = d->geometry.distanceResults[pair_id_].nearest_points[0] -
                 d->geometry.distanceResults[pair_id_].nearest_points[1];
     d->dist = d->p_diff.norm();
+    // Save the square root of the distance, to avoid its computation again
+    d->dist_sqrt = std::sqrt(d->dist);
     // Compute the velocity of the foot
     d->v = (pinocchio::getFrameVelocity(pin_model_, *d->pinocchio, frame_id_, type_)).toVector();
     // Compute the residual
-
     if(d->geometry.distanceResults[pair_id_].min_distance > 0) {
-        d->r[0] = std::pow(d->v[0], 2) / (std::sqrt(d->dist) + beta_); // usa la moltiplicazione, non pow
-        d->r[1] = std::pow(d->v[1], 2) / (std::sqrt(d->dist) + beta_);
+        d->r[0] = d->v[0] * d->v[0] / (d->dist_sqrt + beta_);
+        d->r[1] = d->v[1] * d->v[1] / (d->dist_sqrt + beta_);
     }
     else {
-        d->r[0] = std::pow(d->v[0], 2) / beta_;
-        d->r[1] = std::pow(d->v[1], 2) / beta_;
+        d->r[0] = d->v[0] * d->v[0] / beta_;
+        d->r[1] = d->v[1] * d->v[1] / beta_;
     }
+    STOP_PROFILER("ResidualModelObstacleAvoidance::calc");
 }
 
 template <typename Scalar>
 void ResidualModelObstacleAvoidanceTpl<Scalar>::calcDiff(const boost::shared_ptr<ResidualDataAbstract> &data,
                                                          const Eigen::Ref<const VectorXs> &,
                                                          const Eigen::Ref<const VectorXs> &) {
+    START_PROFILER("ResidualModelObstacleAvoidance::calcDiff");
     Data* d = static_cast<Data*>(data.get());
-    const Eigen::IOFormat HeavyFmt(Eigen::FullPrecision, 0, ", ", ";\n", "[", "]", "[", "]");
-
+    // const Eigen::IOFormat HeavyFmt(Eigen::FullPrecision, 0, ", ", ";\n", "[", "]", "[", "]");
+    START_PROFILER("ResidualModelObstacleAvoidance::calcDiff.getFrame");
     // Compute the frame Jacobian, consider the first three rows (derivatives wrt the position of the frame)
     pinocchio::getFrameJacobian(pin_model_, *d->pinocchio, frame_id_, type_, d->J);
-    Matrix3xs p_diff_der = d->J.template topRows<3>();
 
     // Compute the derivatives of the foot's velocity
     pinocchio::getFrameVelocityDerivatives(pin_model_, *d->pinocchio, frame_id_, type_,
                                            d->dv_dx.leftCols(nv_), d->dv_dx.rightCols(nv_));
 
     // IMPORTANT: translate the derivatives of the linear velocity from the WORLD to LOCAL_WORLD_ALIGNED reference frame
-    Matrix6xs dv0_dx(Matrix6xs::Zero(6, state_->get_ndx()));
     pinocchio::getFrameVelocityDerivatives(pin_model_, *d->pinocchio, frame_id_, pinocchio::WORLD,
-                                           dv0_dx.leftCols(nv_), dv0_dx.rightCols(nv_));
-
+                                           d->dv0_dx.leftCols(nv_), d->dv0_dx.rightCols(nv_));
+    STOP_PROFILER("ResidualModelObstacleAvoidance::calcDiff.getFrame");
     Vector3s p = d->pinocchio->oMf[frame_id_].translation();
     Vector3s omega = d->v.tail(3);
-    Matrix3s p_skew = pinocchio::skew(p);
-    Matrix3s omega_skew = pinocchio::skew(omega);
-    d->dv_dx.topLeftCorner(3, nv_) = dv0_dx.topLeftCorner(3, nv_) - p_skew * dv0_dx.bottomLeftCorner(3, nv_) +
-                                     omega_skew * p_diff_der;
+    d->dv_dx.topLeftCorner(3, nv_) = d->dv0_dx.topLeftCorner(3, nv_);
+    d->dv_dx.topLeftCorner(3, nv_).noalias() -= pinocchio::skew(p) * d->dv0_dx.bottomLeftCorner(3, nv_);
+    d->dv_dx.topLeftCorner(3, nv_).noalias() += pinocchio::skew(omega) * d->J.topRows(3);
     // Compute the residual Jacobian, considering the two cases
     if(d->geometry.distanceResults[pair_id_].min_distance > 0) {
         // 1) min dist > 0 --> compute the complete derivatives of the residual
-        VectorXs norm_der = d->p_diff / d->dist;
-        VectorXs dist_der_dq = norm_der.transpose() * p_diff_der;
-        VectorXs dist_der_dv(VectorXs::Zero(nv_, 1));
-        VectorXs dist_der(dist_der_dq.size() + dist_der_dv.size());
-        dist_der << dist_der_dq, dist_der_dv;    // definisci in data, poi aggiungi l'head con le derivate
-
+        Vector3s norm_der = d->p_diff / d->dist;
+        d->dist_der.head(nv_) = norm_der.transpose() * d->J.topRows(3);
+        Vector2s vel_square;
+        vel_square << d->v[0] * d->v[0], d->v[1] * d->v[1];
         // Chain rule
-        for(size_t i = 0; i < nr_; i++) {
-            for(size_t j = 0; j < ndx_; j++) {
-                d->Rx(i,j) = - (std::pow(d->v[i], 2) * dist_der[j]) / (2 * std::pow((beta_ + std::sqrt(d->dist)), 2) * std::sqrt(d->dist)) +
-                                (2 * d->v[i] * d->dv_dx(i,j)) / (beta_ + std::sqrt(d->dist));  // evita pow
-            }
-        }
+        d->Rx = 2 / (d->dist_sqrt + beta_) * d->v.head(2).asDiagonal() * d->dv_dx.topRows(2)
+                - 1 / (2 * d->dist_sqrt * (d->dist_sqrt + beta_) * (d->dist_sqrt + beta_))* vel_square * d->dist_der.transpose();
     }
     else {
-        for(size_t i = 0; i < nr_; i++) {
-            for(size_t j = 0; j < ndx_; j++) {
-                d->Rx(i,j) = (2 * d->v[i] * d->dv_dx(i,j)) / beta_;
-            }
-        }
+        d->Rx = 2 / beta_ * d->v.head(2).asDiagonal() * d->dv_dx.topRows(2);
     }
+    STOP_PROFILER("ResidualModelObstacleAvoidance::calcDiff");
 }
 
 template <typename Scalar>
