@@ -10,6 +10,7 @@
 #include <pinocchio/algorithm/kinematics-derivatives.hpp>
 #include <pinocchio/algorithm/frames-derivatives.hpp>
 #include "crocoddyl/multibody/residuals/frame-velocity.hpp"
+#include "crocoddyl/core/utils/stop-watch.hpp"
 
 namespace crocoddyl {
 
@@ -39,21 +40,25 @@ template <typename Scalar>
 void ResidualModelFrameVelocityTpl<Scalar>::calc(const boost::shared_ptr<ResidualDataAbstract>& data,
                                                  const Eigen::Ref<const VectorXs>&,
                                                  const Eigen::Ref<const VectorXs>&) {
+  START_PROFILER("ResidualModelFrameVelocity::calc");
   Data* d = static_cast<Data*>(data.get());
 
   // Compute the frame velocity w.r.t. the reference frame
   data->r = (pinocchio::getFrameVelocity(*pin_model_.get(), *d->pinocchio, id_, type_) - vref_).toVector();
+  STOP_PROFILER("ResidualModelFrameVelocity::calc");
 }
 
 template <typename Scalar>
 void ResidualModelFrameVelocityTpl<Scalar>::calcDiff(const boost::shared_ptr<ResidualDataAbstract>& data,
                                                      const Eigen::Ref<const VectorXs>&,
                                                      const Eigen::Ref<const VectorXs>&) {
+  START_PROFILER("ResidualModelFrameVelocity::calcDiff");
   // Get the partial derivatives of the local frame velocity
   Data* d = static_cast<Data*>(data.get());
   const std::size_t nv = state_->get_nv();
   pinocchio::getFrameVelocityDerivatives(*pin_model_.get(), *d->pinocchio, id_, type_, data->Rx.leftCols(nv),
                                          data->Rx.rightCols(nv));
+  STOP_PROFILER("ResidualModelFrameVelocity::calcDiff");
 }
 
 template <typename Scalar>

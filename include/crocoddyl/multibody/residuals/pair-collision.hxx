@@ -7,6 +7,7 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 #include "crocoddyl/core/utils/exception.hpp"
+#include "crocoddyl/core/utils/stop-watch.hpp"
 
 namespace crocoddyl {
 
@@ -29,6 +30,7 @@ template <typename Scalar>
 void ResidualModelPairCollisionTpl<Scalar>::calc(const boost::shared_ptr<ResidualDataAbstract> &data,
                                                  const Eigen::Ref<const VectorXs> &x,
                                                  const Eigen::Ref<const VectorXs> &) {
+  START_PROFILER("ResidualModelPairCollision::calc");
   Data *d = static_cast<Data *>(data.get());
 
   const Eigen::VectorBlock<const Eigen::Ref<const VectorXs>, Eigen::Dynamic> q = x.head(state_->get_nq());
@@ -40,12 +42,14 @@ void ResidualModelPairCollisionTpl<Scalar>::calc(const boost::shared_ptr<Residua
   // calculate residual
   data->r = d->geometry.distanceResults[pair_id_].nearest_points[0] -
             d->geometry.distanceResults[pair_id_].nearest_points[1];
+  STOP_PROFILER("ResidualModelPairCollision::calc");
 }
 
 template <typename Scalar>
 void ResidualModelPairCollisionTpl<Scalar>::calcDiff(const boost::shared_ptr<ResidualDataAbstract> &data,
                                                      const Eigen::Ref<const VectorXs> &,
                                                      const Eigen::Ref<const VectorXs> &) {
+  START_PROFILER("ResidualModelPairCollision::calcDiff");
   Data *d = static_cast<Data *>(data.get());
 
   const std::size_t nv = state_->get_nv();
@@ -59,6 +63,7 @@ void ResidualModelPairCollisionTpl<Scalar>::calcDiff(const boost::shared_ptr<Res
 
   // --- Compute the residual derivatives ---
   d->Rx.topLeftCorner(3, nv) = d->J.template topRows<3>();
+  STOP_PROFILER("ResidualModelPairCollision::calcDiff");
 }
 
 template <typename Scalar>

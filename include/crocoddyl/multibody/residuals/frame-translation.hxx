@@ -8,6 +8,7 @@
 
 #include <pinocchio/algorithm/frames.hpp>
 #include "crocoddyl/multibody/residuals/frame-translation.hpp"
+#include "crocoddyl/core/utils/stop-watch.hpp"
 
 namespace crocoddyl {
 
@@ -30,16 +31,19 @@ template <typename Scalar>
 void ResidualModelFrameTranslationTpl<Scalar>::calc(const boost::shared_ptr<ResidualDataAbstract>& data,
                                                     const Eigen::Ref<const VectorXs>&,
                                                     const Eigen::Ref<const VectorXs>&) {
+  START_PROFILER("ResidualModelFrameTranslation::calc");
   // Compute the frame translation w.r.t. the reference frame
   Data* d = static_cast<Data*>(data.get());
   pinocchio::updateFramePlacement(*pin_model_.get(), *d->pinocchio, id_);
   data->r = d->pinocchio->oMf[id_].translation() - xref_;
+  STOP_PROFILER("ResidualModelFrameTranslation::calc");
 }
 
 template <typename Scalar>
 void ResidualModelFrameTranslationTpl<Scalar>::calcDiff(const boost::shared_ptr<ResidualDataAbstract>& data,
                                                         const Eigen::Ref<const VectorXs>&,
                                                         const Eigen::Ref<const VectorXs>&) {
+  START_PROFILER("ResidualModelFrameTranslation::calcDiff");
   Data* d = static_cast<Data*>(data.get());
 
   // Compute the derivatives of the frame translation
@@ -47,6 +51,7 @@ void ResidualModelFrameTranslationTpl<Scalar>::calcDiff(const boost::shared_ptr<
   pinocchio::getFrameJacobian(*pin_model_.get(), *d->pinocchio, id_, pinocchio::LOCAL, d->fJf);
   d->Rx.leftCols(nv).noalias() = d->pinocchio->oMf[id_].rotation() * d->fJf.template topRows<3>();
   ;
+  STOP_PROFILER("ResidualModelFrameTranslation::calcDiff");
 }
 
 template <typename Scalar>
