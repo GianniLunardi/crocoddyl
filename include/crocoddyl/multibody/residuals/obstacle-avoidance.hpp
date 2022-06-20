@@ -43,9 +43,7 @@ class ResidualModelObstacleAvoidanceTpl: public ResidualModelAbstractTpl<_Scalar
     typedef typename MathBase::Vector2s Vector2s;
     typedef typename MathBase::Vector3s Vector3s;
     typedef typename MathBase::VectorXs VectorXs;
-//    typedef typename MathBase::Matrix2s Matrix2s;
     typedef typename MathBase::Matrix3s Matrix3s;
-//    typedef typename MathBase::Matrix3xs Matrix3xs;
     typedef typename MathBase::Matrix6xs Matrix6xs;
 
     ResidualModelObstacleAvoidanceTpl(boost::shared_ptr<StateMultibody> state,
@@ -124,8 +122,7 @@ struct ResidualDataObstacleAvoidanceTpl : public ResidualDataAbstractTpl<_Scalar
             geometry(pinocchio::GeometryData(model->get_geometry())),
             dist_der(VectorXs::Zero(model->get_state()->get_ndx())),
             J(Matrix6xs::Zero(6, model->get_state()->get_nv())),
-            dv_dx(Matrix6xs::Zero(6, model->get_state()->get_ndx())),
-            dv0_dx(Matrix6xs::Zero(6, model->get_state()->get_ndx())) {
+            dv_dx(Matrix6xs::Zero(6, model->get_state()->get_ndx())) {
         // Check that proper shared data has been passed
         DataCollectorMultibodyTpl<Scalar> *d = dynamic_cast<DataCollectorMultibodyTpl<Scalar> *>(shared);
         if (d == NULL) {
@@ -138,14 +135,11 @@ struct ResidualDataObstacleAvoidanceTpl : public ResidualDataAbstractTpl<_Scalar
 
     pinocchio::GeometryData geometry;
     pinocchio::DataTpl<Scalar>* pinocchio;
-    Scalar dist;
     Scalar dist_sqrt;
-    Vector3s p_diff;
     Vector6s v;
     VectorXs dist_der;
     Matrix6xs J;
     Matrix6xs dv_dx;
-    Matrix6xs dv0_dx;
     using Base::r;
     using Base::Ru;
     using Base::Rx;

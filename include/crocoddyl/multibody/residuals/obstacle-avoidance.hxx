@@ -3,7 +3,6 @@
 #include <pinocchio/algorithm/frames.hpp>
 #include <pinocchio/algorithm/kinematics-derivatives.hpp>
 #include <pinocchio/algorithm/frames-derivatives.hpp>
-//#include <armadillo>
 #include "crocoddyl/core/utils/exception.hpp"
 #include "crocoddyl/core/utils/stop-watch.hpp"
 #include "crocoddyl/multibody/residuals/obstacle-avoidance.hpp"
@@ -32,24 +31,25 @@ ResidualModelObstacleAvoidanceTpl<Scalar>::~ResidualModelObstacleAvoidanceTpl() 
 
 template <typename Scalar>
 void ResidualModelObstacleAvoidanceTpl<Scalar>::calc(const boost::shared_ptr<ResidualDataAbstract> &data,
-                                                     const Eigen::Ref<const VectorXs> &x,
+                                                     const Eigen::Ref<const VectorXs> &,
                                                      const Eigen::Ref<const VectorXs> &) {
     START_PROFILER("ResidualModelObstacleAvoidance::calc");
     Data* d = static_cast<Data*>(data.get());
 
     // Compute the distance for the collision pair
-    pinocchio::updateGeometryPlacements(pin_model_, *d->pinocchio, *geom_model_.get(), d->geometry, x.head(nq_));
+    START_PROFILER("ResidualModelObstacleAvoidance::calc.update");
+    pinocchio::updateGeometryPlacements(pin_model_, *d->pinocchio, *geom_model_.get(), d->geometry);
+    STOP_PROFILER("ResidualModelObstacleAvoidance::calc.update");
+
+    START_PROFILER("ResidualModelObstacleAvoidance::calc.computeDistance");
     pinocchio::computeDistance(*geom_model_.get(), d->geometry, pair_id_);
-    // Compute the distance between the two nearest points
-    d->p_diff = d->geometry.distanceResults[pair_id_].nearest_points[0] -
-                d->geometry.distanceResults[pair_id_].nearest_points[1];
-    d->dist = d->p_diff.norm();
-    // Save the square root of the distance, to avoid its computation again
-    d->dist_sqrt = std::sqrt(d->dist);
+    STOP_PROFILER("ResidualModelObstacleAvoidance::calc.computeDistance");
     // Compute the velocity of the foot
     d->v = (pinocchio::getFrameVelocity(pin_model_, *d->pinocchio, frame_id_, type_)).toVector();
     // Compute the residual
     if(d->geometry.distanceResults[pair_id_].min_distance > 0) {
+        // Square root of the distance btw the obstacles
+        d->dist_sqrt = std::sqrt(d->geometry.distanceResults[pair_id_].min_distance);
         d->r[0] = d->v[0] * d->v[0] / (d->dist_sqrt + beta_);
         d->r[1] = d->v[1] * d->v[1] / (d->dist_sqrt + beta_);
     }
@@ -74,21 +74,15 @@ void ResidualModelObstacleAvoidanceTpl<Scalar>::calcDiff(const boost::shared_ptr
     // Compute the derivatives of the foot's velocity
     pinocchio::getFrameVelocityDerivatives(pin_model_, *d->pinocchio, frame_id_, type_,
                                            d->dv_dx.leftCols(nv_), d->dv_dx.rightCols(nv_));
-
-    // IMPORTANT: translate the derivatives of the linear velocity from the WORLD to LOCAL_WORLD_ALIGNED reference frame
-    pinocchio::getFrameVelocityDerivatives(pin_model_, *d->pinocchio, frame_id_, pinocchio::WORLD,
-                                           d->dv0_dx.leftCols(nv_), d->dv0_dx.rightCols(nv_));
     STOP_PROFILER("ResidualModelObstacleAvoidance::calcDiff.getFrame");
-    Vector3s p = d->pinocchio->oMf[frame_id_].translation();
     Vector3s omega = d->v.tail(3);
-    d->dv_dx.topLeftCorner(3, nv_) = d->dv0_dx.topLeftCorner(3, nv_);
-    d->dv_dx.topLeftCorner(3, nv_).noalias() -= pinocchio::skew(p) * d->dv0_dx.bottomLeftCorner(3, nv_);
+    // Add the missing term in the top left corner (LOCAL_WORLD_ALIGNED)
     d->dv_dx.topLeftCorner(3, nv_).noalias() += pinocchio::skew(omega) * d->J.topRows(3);
     // Compute the residual Jacobian, considering the two cases
     if(d->geometry.distanceResults[pair_id_].min_distance > 0) {
         // 1) min dist > 0 --> compute the complete derivatives of the residual
-        Vector3s norm_der = d->p_diff / d->dist;
-        d->dist_der.head(nv_) = norm_der.transpose() * d->J.topRows(3);
+        // Normal: take the opposite direction wrt the one compute by hpp-fcl
+        d->dist_der.head(nv_) = -d->geometry.distanceResults[pair_id_].normal.transpose() * d->J.topRows(3);
         Vector2s vel_square;
         vel_square << d->v[0] * d->v[0], d->v[1] * d->v[1];
         // Chain rule
