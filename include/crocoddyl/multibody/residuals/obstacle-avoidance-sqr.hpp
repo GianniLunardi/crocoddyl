@@ -1,7 +1,7 @@
 // Author: Gianni Lunardi, University of Trento 2022
 
-#ifndef CROCODDYL_MULTIBODY_RESIDUALS_OBSTACLE_AVOIDANCE_HPP_
-#define CROCODDYL_MULTIBODY_RESIDUALS_OBSTACLE_AVOIDANCE_HPP_
+#ifndef CROCODDYL_MULTIBODY_RESIDUALS_OBSTACLE_AVOIDANCE_SQR_HPP_
+#define CROCODDYL_MULTIBODY_RESIDUALS_OBSTACLE_AVOIDANCE_SQR_HPP_
 
 #include <pinocchio/multibody/fwd.hpp>
 #include <pinocchio/spatial/motion.hpp>
@@ -27,14 +27,14 @@ BRIEF FOR DOXYGEN
 
 
 template <typename _Scalar>
-class ResidualModelObstacleAvoidanceTpl: public ResidualModelAbstractTpl<_Scalar> {
+class ResidualModelObstacleAvoidanceSqrTpl: public ResidualModelAbstractTpl<_Scalar> {
   public:
     EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
     typedef _Scalar Scalar;
     typedef MathBaseTpl<Scalar> MathBase;
     typedef ResidualModelAbstractTpl<Scalar> Base;
-    typedef ResidualDataObstacleAvoidanceTpl<Scalar> Data;
+    typedef ResidualDataObstacleAvoidanceSqrTpl<Scalar> Data;
     typedef StateMultibodyTpl<Scalar> StateMultibody;
     typedef ResidualDataAbstractTpl<Scalar> ResidualDataAbstract;
     typedef DataCollectorAbstractTpl<Scalar> DataCollectorAbstract;
@@ -46,7 +46,7 @@ class ResidualModelObstacleAvoidanceTpl: public ResidualModelAbstractTpl<_Scalar
     typedef typename MathBase::Matrix3s Matrix3s;
     typedef typename MathBase::Matrix6xs Matrix6xs;
 
-    ResidualModelObstacleAvoidanceTpl(boost::shared_ptr<StateMultibody> state,
+    ResidualModelObstacleAvoidanceSqrTpl(boost::shared_ptr<StateMultibody> state,
                                       const std::size_t nu,
                                       boost::shared_ptr<GeometryModel> geom_model,
                                       const pinocchio::PairIndex pair_id,
@@ -58,7 +58,7 @@ class ResidualModelObstacleAvoidanceTpl: public ResidualModelAbstractTpl<_Scalar
     Brief
     */
 
-    virtual ~ResidualModelObstacleAvoidanceTpl();
+    virtual ~ResidualModelObstacleAvoidanceSqrTpl();
 
     virtual void calc(const boost::shared_ptr<ResidualDataAbstract> &data,
                       const Eigen::Ref<const VectorXs> &x, const Eigen::Ref<const VectorXs> &u);
@@ -101,7 +101,7 @@ class ResidualModelObstacleAvoidanceTpl: public ResidualModelAbstractTpl<_Scalar
 };
 
 template <typename _Scalar>
-struct ResidualDataObstacleAvoidanceTpl : public ResidualDataAbstractTpl<_Scalar> {
+struct ResidualDataObstacleAvoidanceSqrTpl : public ResidualDataAbstractTpl<_Scalar> {
     EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
     typedef _Scalar Scalar;
@@ -117,10 +117,10 @@ struct ResidualDataObstacleAvoidanceTpl : public ResidualDataAbstractTpl<_Scalar
     typedef typename MathBase::VectorXs VectorXs;
 
     template <template <typename Scalar> class Model>
-    ResidualDataObstacleAvoidanceTpl(Model <Scalar> *const model, DataCollectorAbstract *const data)
+    ResidualDataObstacleAvoidanceSqrTpl(Model <Scalar> *const model, DataCollectorAbstract *const data)
         :   Base(model, data),
             geometry(pinocchio::GeometryData(model->get_geometry())),
-            dist_dx(VectorXs::Zero(model->get_state()->get_ndx())),
+            dist_der(VectorXs::Zero(model->get_state()->get_ndx())),
             J(Matrix6xs::Zero(6, model->get_state()->get_nv())),
             dv_dx(Matrix6xs::Zero(6, model->get_state()->get_ndx())) {
         // Check that proper shared data has been passed
@@ -137,7 +137,7 @@ struct ResidualDataObstacleAvoidanceTpl : public ResidualDataAbstractTpl<_Scalar
     pinocchio::DataTpl<Scalar>* pinocchio;
     Scalar dist_sqrt;
     Vector6s v;
-    VectorXs dist_dx;
+    VectorXs dist_der;
     Matrix6xs J;
     Matrix6xs dv_dx;
     using Base::r;
@@ -148,6 +148,6 @@ struct ResidualDataObstacleAvoidanceTpl : public ResidualDataAbstractTpl<_Scalar
 
 }   // namespace crocoddyl
 
-#include "crocoddyl/multibody/residuals/obstacle-avoidance.hxx"
+#include "crocoddyl/multibody/residuals/obstacle-avoidance-sqr.hxx"
 
-#endif   // CROCODDYL_MULTIBODY_RESIDUALS_OBSTACLE_AVOIDANCE_HPP_
+#endif   // CROCODDYL_MULTIBODY_RESIDUALS_OBSTACLE_AVOIDANCE_SQR_HPP_
