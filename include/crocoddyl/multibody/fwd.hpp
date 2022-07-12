@@ -159,6 +159,11 @@ template <typename Scalar>
 struct ResidualDataObstacleAvoidanceTpl;
 
 template <typename Scalar>
+class ResidualModelObstacleAvoidanceSqrTpl;
+template <typename Scalar>
+struct ResidualDataObstacleAvoidanceSqrTpl;
+
+template <typename Scalar>
 class ResidualModelStateTpl;
 template <typename Scalar>
 struct ResidualDataStateTpl;
@@ -414,6 +419,8 @@ typedef ResidualModelImpulseCoMTpl<double> ResidualModelImpulseCoM;
 typedef ResidualDataImpulseCoMTpl<double> ResidualDataImpulseCoM;
 typedef ResidualModelObstacleAvoidanceTpl<double> ResidualModelObstacleAvoidance;
 typedef ResidualDataObstacleAvoidanceTpl<double> ResidualDataObstacleAvoidance;
+typedef ResidualModelObstacleAvoidanceSqrTpl<double> ResidualModelObstacleAvoidanceSqr;
+typedef ResidualDataObstacleAvoidanceSqrTpl<double> ResidualDataObstacleAvoidanceSqr;
 typedef ResidualModelStateTpl<double> ResidualModelState;
 typedef ResidualDataStateTpl<double> ResidualDataState;
 
