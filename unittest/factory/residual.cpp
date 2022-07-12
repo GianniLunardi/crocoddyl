@@ -61,6 +61,9 @@ std::ostream& operator<<(std::ostream& os, ResidualModelTypes::Type type) {
     case ResidualModelTypes::ResidualModelObstacleAvoidance:
       os << "ResidualModelObstacleAvoidance";
       break;
+    case ResidualModelTypes::ResidualModelObstacleAvoidanceSqr:
+      os << "ResidualModelObstacleAvoidanceSqr";
+      break;
     case ResidualModelTypes::NbResidualModelTypes:
       os << "NbResidualModelTypes";
       break;
@@ -142,6 +145,11 @@ boost::shared_ptr<crocoddyl::ResidualModelAbstract> ResidualModelFactory::create
       break;
     case ResidualModelTypes::ResidualModelObstacleAvoidance:
       residual = boost::make_shared<crocoddyl::ResidualModelObstacleAvoidance>(
+          state, nu, geomModel, 0, frame_index, pinocchio::LOCAL_WORLD_ALIGNED, beta
+          );
+      break;
+    case ResidualModelTypes::ResidualModelObstacleAvoidanceSqr:
+      residual = boost::make_shared<crocoddyl::ResidualModelObstacleAvoidanceSqr>(
           state, nu, geomModel, 0, frame_index, pinocchio::LOCAL_WORLD_ALIGNED, beta
           );
       break;
