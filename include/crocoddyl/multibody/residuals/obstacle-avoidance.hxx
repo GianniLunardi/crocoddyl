@@ -54,8 +54,8 @@ void ResidualModelObstacleAvoidanceTpl<Scalar>::calc(const boost::shared_ptr<Res
         d->r[1] = d->v[1] / (d->dist_sqrt + beta_);
     }
     else {
-        d->r[0] = d->v[0] * d->v[0] / beta_;
-        d->r[1] = d->v[1] * d->v[1] / beta_;
+        d->r[0] = d->v[0] / beta_;
+        d->r[1] = d->v[1] / beta_;
     }
     STOP_PROFILER("ResidualModelObstacleAvoidance::calc");
 }
