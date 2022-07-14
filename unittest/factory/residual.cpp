@@ -19,6 +19,7 @@
 #include "crocoddyl/multibody/residuals/control-gravity.hpp"
 #include "crocoddyl/multibody/residuals/pair-collision.hpp"
 #include "crocoddyl/multibody/residuals/obstacle-avoidance.hpp"
+#include "crocoddyl/multibody/residuals/obstacle-avoidance-sqr.hpp"
 #include "crocoddyl/core/utils/exception.hpp"
 
 namespace crocoddyl {
