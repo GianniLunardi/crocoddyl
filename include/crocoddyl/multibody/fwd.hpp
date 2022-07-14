@@ -417,10 +417,12 @@ typedef ResidualModelFrameVelocityTpl<double> ResidualModelFrameVelocity;
 typedef ResidualDataFrameVelocityTpl<double> ResidualDataFrameVelocity;
 typedef ResidualModelImpulseCoMTpl<double> ResidualModelImpulseCoM;
 typedef ResidualDataImpulseCoMTpl<double> ResidualDataImpulseCoM;
+// Obstacle Residuals
 typedef ResidualModelObstacleAvoidanceTpl<double> ResidualModelObstacleAvoidance;
 typedef ResidualDataObstacleAvoidanceTpl<double> ResidualDataObstacleAvoidance;
 typedef ResidualModelObstacleAvoidanceSqrTpl<double> ResidualModelObstacleAvoidanceSqr;
 typedef ResidualDataObstacleAvoidanceSqrTpl<double> ResidualDataObstacleAvoidanceSqr;
+
 typedef ResidualModelStateTpl<double> ResidualModelState;
 typedef ResidualDataStateTpl<double> ResidualDataState;
 
