@@ -20,6 +20,7 @@
 #include "crocoddyl/multibody/residuals/pair-collision.hpp"
 #include "crocoddyl/multibody/residuals/obstacle-avoidance.hpp"
 #include "crocoddyl/multibody/residuals/obstacle-avoidance-sqr.hpp"
+#include "crocoddyl/multibody/residuals/obstacle-avoidance-exp.hpp"
 #include "crocoddyl/core/utils/exception.hpp"
 
 namespace crocoddyl {
@@ -64,6 +65,9 @@ std::ostream& operator<<(std::ostream& os, ResidualModelTypes::Type type) {
       break;
     case ResidualModelTypes::ResidualModelObstacleAvoidanceSqr:
       os << "ResidualModelObstacleAvoidanceSqr";
+      break;
+    case ResidualModelTypes::ResidualModelObstacleAvoidanceExp:
+      os << "ResidualModelObstacleAvoidanceExp";
       break;
     case ResidualModelTypes::NbResidualModelTypes:
       os << "NbResidualModelTypes";
@@ -151,6 +155,11 @@ boost::shared_ptr<crocoddyl::ResidualModelAbstract> ResidualModelFactory::create
       break;
     case ResidualModelTypes::ResidualModelObstacleAvoidanceSqr:
       residual = boost::make_shared<crocoddyl::ResidualModelObstacleAvoidanceSqr>(
+          state, nu, geomModel, 0, frame_index, pinocchio::LOCAL_WORLD_ALIGNED, beta
+          );
+      break;
+    case ResidualModelTypes::ResidualModelObstacleAvoidanceExp:
+      residual = boost::make_shared<crocoddyl::ResidualModelObstacleAvoidanceExp>(
           state, nu, geomModel, 0, frame_index, pinocchio::LOCAL_WORLD_ALIGNED, beta
           );
       break;

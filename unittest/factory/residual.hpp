@@ -32,6 +32,7 @@ struct ResidualModelTypes {
     ResidualModelPairCollision,
     ResidualModelObstacleAvoidance,
     ResidualModelObstacleAvoidanceSqr,
+    ResidualModelObstacleAvoidanceExp,
     NbResidualModelTypes
   };
   static std::vector<Type> init_all() {
