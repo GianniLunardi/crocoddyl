@@ -12,12 +12,12 @@ namespace crocoddyl {
 
 template <typename Scalar>
 ResidualModelObstacleAvoidanceSqrTpl<Scalar>::ResidualModelObstacleAvoidanceSqrTpl(boost::shared_ptr<StateMultibody> state,
-                                                                             const std::size_t nu,
-                                                                             boost::shared_ptr<GeometryModel> geom_model,
-                                                                             const pinocchio::PairIndex pair_id,
-                                                                             const pinocchio::FrameIndex frame_id,
-                                                                             const pinocchio::ReferenceFrame type,
-                                                                             const double beta)
+                                                                                   const std::size_t nu,
+                                                                                   boost::shared_ptr<GeometryModel> geom_model,
+                                                                                   const pinocchio::PairIndex pair_id,
+                                                                                   const pinocchio::FrameIndex frame_id,
+                                                                                   const pinocchio::ReferenceFrame type,
+                                                                                   const double beta)
     : Base(state, 2, nu, true, true, false),
       pin_model_(*state->get_pinocchio()),
       geom_model_(geom_model),
