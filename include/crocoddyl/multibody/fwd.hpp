@@ -169,6 +169,12 @@ class ResidualModelObstacleAvoidanceExpTpl;
 template <typename Scalar>
 struct ResidualDataObstacleAvoidanceExpTpl;
 
+// Fly-high
+template <typename Scalar>
+class ResidualModelFlyHighSqrTpl;
+template <typename Scalar>
+struct ResidualDataFlyHighSqrTpl;
+
 template <typename Scalar>
 class ResidualModelStateTpl;
 template <typename Scalar>
@@ -430,6 +436,9 @@ typedef ResidualModelObstacleAvoidanceSqrTpl<double> ResidualModelObstacleAvoida
 typedef ResidualDataObstacleAvoidanceSqrTpl<double> ResidualDataObstacleAvoidanceSqr;
 typedef ResidualModelObstacleAvoidanceExpTpl<double> ResidualModelObstacleAvoidanceExp;
 typedef ResidualDataObstacleAvoidanceExpTpl<double> ResidualDataObstacleAvoidanceExp;
+// Fly-high
+typedef ResidualModelFlyHighSqrTpl<double> ResidualModelFlyHighSqr;
+typedef ResidualDataFlyHighSqrTpl<double> ResidualDataFlyHighSqr;
 
 typedef ResidualModelStateTpl<double> ResidualModelState;
 typedef ResidualDataStateTpl<double> ResidualDataState;
