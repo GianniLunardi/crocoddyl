@@ -17,6 +17,8 @@ INCLUDE(cmake/boost.cmake)
 INCLUDE(cmake/python.cmake)
 INCLUDE(cmake/apple.cmake)
 
+SET(CMAKE_INSTALL_PREFIX "$ENV{HOME}/devel/install" CACHE PATH "Install path prefix")
+
 # Print initial message
 MESSAGE(STATUS "${PROJECT_DESCRIPTION}, version ${PROJECT_VERSION}")
 MESSAGE(STATUS "Copyright (C) 2018-2021 CNRS-LAAS, University of Edinburgh, INRIA")
@@ -75,7 +77,7 @@ ADD_OPTIONAL_DEPENDENCY("scipy")
 
 OPTION(BUILD_WITH_CODEGEN_SUPPORT "Build the library with the Code Generation support (required CppADCodeGen)" OFF)
 
-OPTION(BUILD_WITH_MULTITHREADS "Build the library with the Multithreading support (required OpenMP)" OFF)
+OPTION(BUILD_WITH_MULTITHREADS "Build the library with the Multithreading support (required OpenMP)" ON)
 IF(BUILD_WITH_MULTITHREADS)
   # If BUILD_WITH_NTHREADS defined, use the value - otherwise detect
   IF(NOT DEFINED BUILD_WITH_NTHREADS)
