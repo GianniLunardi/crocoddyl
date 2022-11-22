@@ -51,6 +51,8 @@ void exposeResidualImpulseCoM();
 void exposeResidualObstacleAvoidance();
 void exposeResidualObstacleSqr();
 void exposeResidualObstacleExp();
+void exposeResidualFlyHighSqr();
+void exposeResidualFlyHighExp();
 
 #ifdef PINOCCHIO_WITH_HPP_FCL
 void exposeResidualPairCollision();

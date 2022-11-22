@@ -48,6 +48,8 @@ void exposeMultibody() {
   exposeResidualObstacleAvoidance();
   exposeResidualObstacleSqr();
   exposeResidualObstacleExp();
+  exposeResidualFlyHighSqr();
+  exposeResidualFlyHighExp();
 
 #ifdef PINOCCHIO_WITH_HPP_FCL
   exposeResidualPairCollision();
