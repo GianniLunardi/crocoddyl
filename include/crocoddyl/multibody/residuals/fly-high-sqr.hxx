@@ -12,9 +12,9 @@ namespace crocoddyl {
 
 template <typename Scalar>
 ResidualModelFlyHighSqrTpl<Scalar>::ResidualModelFlyHighSqrTpl(boost::shared_ptr<StateMultibody> state,
-                                                            const std::size_t nu,
-                                                            const pinocchio::FrameIndex frame_id,
-                                                            const double beta)
+                                                               const std::size_t nu,
+                                                               const pinocchio::FrameIndex frame_id,
+                                                               const double beta)
     : Base(state, 2, nu, true, true, false),
       pin_model_(*state->get_pinocchio()),
       frame_id_(frame_id),
@@ -36,6 +36,7 @@ void ResidualModelFlyHighSqrTpl<Scalar>::calc(const boost::shared_ptr<ResidualDa
                                        *d->pinocchio,
                                        frame_id_,
                                        pinocchio::LOCAL_WORLD_ALIGNED).toVector();
+
     // Compute the height from the ground
     d->h = d->pinocchio->oMf[frame_id_].translation()[2];
     if(d->h > 0) {
@@ -56,6 +57,8 @@ void ResidualModelFlyHighSqrTpl<Scalar>::calcDiff(const boost::shared_ptr<Residu
                                                   const Eigen::Ref<const VectorXs> &) {
     START_PROFILER("ResidualModelFlyHighSqr::calcDiff");
     Data* d = static_cast<Data*>(data.get());
+    // const Eigen::IOFormat HeavyFmt(Eigen::FullPrecision, 0, ", ", ";\n", "[", "]", "[", "]");
+
     pinocchio::getFrameVelocityDerivatives(pin_model_, *d->pinocchio, frame_id_, pinocchio::LOCAL,
                                            d->l_dv_dx.leftCols(nv_), d->l_dv_dx.rightCols(nv_));
     Vector3s v = pinocchio::getFrameVelocity(pin_model_, *d->pinocchio,
@@ -64,21 +67,35 @@ void ResidualModelFlyHighSqrTpl<Scalar>::calcDiff(const boost::shared_ptr<Residu
     // Compute the derivatives of the velocity in the LWA frame
     Matrix3xs vxJ = pinocchio::skew(-v) * d->l_dv_dx.bottomRightCorner(3, nv_);
     vxJ += d->l_dv_dx.topLeftCorner(3, nv_);
+
     d->dv_dx.leftCols(nv_) = R * vxJ;
     d->dv_dx.rightCols(nv_) = R * d->l_dv_dx.topRightCorner(3, nv_);
     // Compute the residual Jacobian, considering the two cases
+    d->Rx = 2 / (d->h_sqrt + beta_) * d->v.head(2).asDiagonal() * d->dv_dx.topRows(2);
     if(d->h > 0) {
         Vector2s vel_square;
         vel_square << d->v[0] * d->v[0], d->v[1] * d->v[1];
-        // Chain rule
-        d->Rx = 2 / (d->h_sqrt + beta_) * d->v.head(2).asDiagonal() * d->dv_dx.topRows(2);
         d->Rx.leftCols(nv_) += - 1 / (2 * d->h_sqrt * (d->h_sqrt + beta_) * (d->h_sqrt + beta_)) * vel_square *
-                               d->dv_dx.template block<1, nv_>(2, nv_);
-    }
-    else {
-        d->Rx = 2 / (d->h_sqrt + beta_) * d->v.head(2).asDiagonal() * d->dv_dx.topRows(2);
+                               d->dv_dx.rightCols(nv_).row(2);
     }
     STOP_PROFILER("ResidualModelFlyHighSqr::calcDiff");
 }
+
+template <typename Scalar>
+boost::shared_ptr<ResidualDataAbstractTpl<Scalar> > ResidualModelFlyHighSqrTpl<Scalar>::createData(
+        DataCollectorAbstract *const data) {
+    return boost::allocate_shared<Data>(Eigen::aligned_allocator<Data>(), this, data);
+}
+
+template <typename Scalar>
+pinocchio::FrameIndex ResidualModelFlyHighSqrTpl<Scalar>::get_frame_id() const {
+    return frame_id_;
+}
+
+template <typename Scalar>
+Scalar ResidualModelFlyHighSqrTpl<Scalar>::get_beta() const {
+    return beta_;
+}
+
 
 }   // namespace crocoddyl

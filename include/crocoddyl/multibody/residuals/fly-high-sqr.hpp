@@ -6,6 +6,7 @@
 #include <pinocchio/multibody/fwd.hpp>
 #include <pinocchio/spatial/motion.hpp>
 #include <pinocchio/multibody/geometry.hpp>
+#include <pinocchio/algorithm/jacobian.hpp>
 #include <pinocchio/algorithm/geometry.hpp>
 #include <Eigen/src/Core/DenseBase.h>
 
@@ -66,6 +67,8 @@ class ResidualModelFlyHighSqrTpl: public ResidualModelAbstractTpl<_Scalar> {
 
     pinocchio::FrameIndex get_frame_id() const;
 
+    Scalar get_beta() const;
+
   protected:
     using Base::nu_;
     using Base::nr_;
@@ -95,6 +98,7 @@ struct ResidualDataFlyHighSqrTpl : public ResidualDataAbstractTpl<_Scalar> {
     typedef DataCollectorAbstractTpl<Scalar> DataCollectorAbstract;
 
     typedef typename MathBase::MatrixXs MatrixXs;
+    typedef typename MathBase::Matrix3xs Matrix3xs;
     typedef typename MathBase::Matrix6xs Matrix6xs;
     typedef typename MathBase::Vector3s Vector3s;
     typedef typename MathBase::Vector6s Vector6s;
@@ -104,7 +108,7 @@ struct ResidualDataFlyHighSqrTpl : public ResidualDataAbstractTpl<_Scalar> {
     ResidualDataFlyHighSqrTpl(Model <Scalar> *const model, DataCollectorAbstract *const data)
             :   Base(model, data),
                 l_dv_dx(Matrix6xs::Zero(6, model->get_state()->get_ndx())),
-                dv_dx(Matrix6xs::Zero(6, model->get_state()->get_ndx())) {
+                dv_dx(Matrix3xs::Zero(3, model->get_state()->get_ndx())) {
         // Check that proper shared data has been passed
         DataCollectorMultibodyTpl<Scalar> *d = dynamic_cast<DataCollectorMultibodyTpl<Scalar> *>(shared);
         if (d == NULL) {
@@ -119,8 +123,8 @@ struct ResidualDataFlyHighSqrTpl : public ResidualDataAbstractTpl<_Scalar> {
     Scalar h;
     Scalar h_sqrt;
     Vector6s v;
-    Matrix6xs dv_dx;            // derivatives in the LOCAL WORLD ALIGNED frame
     Matrix6xs l_dv_dx;          // derivatives in the LOCAL frame
+    Matrix3xs dv_dx;            // derivatives in the LOCAL WORLD ALIGNED frame (we need only der w.r.t. linear velocities)
     using Base::r;
     using Base::Ru;
     using Base::Rx;
@@ -129,7 +133,6 @@ struct ResidualDataFlyHighSqrTpl : public ResidualDataAbstractTpl<_Scalar> {
 
 }   // namespace crocoddyl
 
-
-
+#include "crocoddyl/multibody/residuals/fly-high-sqr.hxx"
 
 #endif //CROCODDYL_MULTIBODY_RESIDUALS_FLY_HIGH_SQR_HPP_
