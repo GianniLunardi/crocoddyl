@@ -17,11 +17,11 @@
 #include "crocoddyl/multibody/residuals/frame-translation.hpp"
 #include "crocoddyl/multibody/residuals/frame-velocity.hpp"
 #include "crocoddyl/multibody/residuals/control-gravity.hpp"
-#include "crocoddyl/multibody/residuals/pair-collision.hpp"
 #include "crocoddyl/multibody/residuals/obstacle-avoidance.hpp"
 #include "crocoddyl/multibody/residuals/obstacle-avoidance-sqr.hpp"
 #include "crocoddyl/multibody/residuals/obstacle-avoidance-exp.hpp"
 #include "crocoddyl/multibody/residuals/fly-high-sqr.hpp"
+#include "crocoddyl/multibody/residuals/fly-high-exp.hpp"
 #include "crocoddyl/core/utils/exception.hpp"
 
 namespace crocoddyl {
@@ -58,9 +58,6 @@ std::ostream& operator<<(std::ostream& os, ResidualModelTypes::Type type) {
     case ResidualModelTypes::ResidualModelControlGrav:
       os << "ResidualModelControlGrav";
       break;
-    case ResidualModelTypes::ResidualModelPairCollision:
-      os << "ResidualModelPairCollision";
-      break;
     case ResidualModelTypes::ResidualModelObstacleAvoidance:
       os << "ResidualModelObstacleAvoidance";
       break;
@@ -72,6 +69,9 @@ std::ostream& operator<<(std::ostream& os, ResidualModelTypes::Type type) {
       break;
     case ResidualModelTypes::ResidualModelFlyHighSqr:
       os << "ResidualModelFlyHighSqr";
+      break;
+    case ResidualModelTypes::ResidualModelFlyHighExp:
+      os << "ResidualModelFlyHighExp";
       break;
     case ResidualModelTypes::NbResidualModelTypes:
       os << "NbResidualModelTypes";
@@ -147,11 +147,6 @@ boost::shared_ptr<crocoddyl::ResidualModelAbstract> ResidualModelFactory::create
     case ResidualModelTypes::ResidualModelControlGrav:
       residual = boost::make_shared<crocoddyl::ResidualModelControlGrav>(state, nu);
       break;
-    case ResidualModelTypes::ResidualModelPairCollision:
-      residual = boost::make_shared<crocoddyl::ResidualModelPairCollision>(
-          state, nu, geomModel, 0, state->get_pinocchio()->frames[frame_index].parent
-          );
-      break;
     case ResidualModelTypes::ResidualModelObstacleAvoidance:
       residual = boost::make_shared<crocoddyl::ResidualModelObstacleAvoidance>(
           state, nu, geomModel, 0, frame_index, pinocchio::LOCAL_WORLD_ALIGNED, beta
@@ -168,6 +163,11 @@ boost::shared_ptr<crocoddyl::ResidualModelAbstract> ResidualModelFactory::create
           );
     case ResidualModelTypes::ResidualModelFlyHighSqr:
       residual = boost::make_shared<crocoddyl::ResidualModelFlyHighSqr>(
+          state, nu, frame_index, beta
+          );
+      break;
+    case ResidualModelTypes::ResidualModelFlyHighExp:
+      residual = boost::make_shared<crocoddyl::ResidualModelFlyHighExp>(
           state, nu, frame_index, beta
           );
       break;
