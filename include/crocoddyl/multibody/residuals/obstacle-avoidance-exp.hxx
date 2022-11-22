@@ -54,6 +54,7 @@ void ResidualModelObstacleAvoidanceExpTpl<Scalar>::calcDiff(const boost::shared_
                                                             const Eigen::Ref<const VectorXs> &) {
     START_PROFILER("ResidualModelObstacleAvoidanceExp::calcDiff");
     Data* d = static_cast<Data*>(data.get());
+    const Eigen::IOFormat HeavyFmt(Eigen::FullPrecision, 0, ", ", ";\n", "[", "]", "[", "]");
 
     // Compute the frame Jacobian, consider the first three rows (derivatives wrt the position of the frame)
     pinocchio::getFrameJacobian(pin_model_, *d->pinocchio, frame_id_, type_, d->J);
