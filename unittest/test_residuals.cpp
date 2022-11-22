@@ -138,8 +138,15 @@ void test_partial_derivatives_against_numdiff(ResidualModelTypes::Type residual_
   const boost::shared_ptr<crocoddyl::ResidualDataAbstract>& data_num_diff = model_num_diff.createData(&shared_data);
 
   // Generating random values for the state and control
-  Eigen::VectorXd x = model->get_state()->rand();
-  const Eigen::VectorXd& u = Eigen::VectorXd::Random(model->get_nu());
+//  Eigen::VectorXd x = model->get_state()->rand();
+  Eigen::VectorXd x(37);
+  x << 0., 0., 0.4792, 0., 0., 0.,  1., -0.1, 0.7,
+       -1., -0.1, -0.7, 1., 0.1, 0.7, -1., 0.1, -0.7, 1.,
+       0.1, 0.2, 0.1, 0.4, 0.6, 0.05,
+       0.1, 0.2, 0.1, 0.4, 0.6, 0.05,
+       0.1, 0.2, 0.1, 0.4, 0.6, 0.05;
+//  const Eigen::VectorXd& u = Eigen::VectorXd::Random(model->get_nu());
+  const Eigen::VectorXd& u = Eigen::VectorXd::Zero(model->get_nu());
 
   // Computing the residual derivatives
   crocoddyl::unittest::updateAllPinocchio(&pinocchio_model, &pinocchio_data, x);
@@ -211,9 +218,9 @@ bool init_function() {
   }
 
   // Test only for the new residual model obstacle avoidance
-//  register_residual_model_unit_tests(ResidualModelTypes::ResidualModelObstacleAvoidance,
-//                                       StateModelTypes::StateMultibody_Anymal,
-//                                       ActuationModelTypes::ActuationModelFloatingBase);
+//  register_residual_model_unit_tests(ResidualModelTypes::ResidualModelFlyHighExp,
+//                                     StateModelTypes::StateMultibody_Anymal,
+//                                     ActuationModelTypes::ActuationModelFloatingBase);
   return true;
 }
 
