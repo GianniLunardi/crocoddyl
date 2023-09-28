@@ -35,6 +35,8 @@ include("${JRL_CMAKE_MODULES}/boost.cmake")
 include("${JRL_CMAKE_MODULES}/apple.cmake")
 include("${JRL_CMAKE_MODULES}/stubs.cmake")
 
+SET(CMAKE_INSTALL_PREFIX "$ENV{HOME}/devel/install" CACHE PATH "Install path prefix")
+
 # Print initial message
 message(STATUS "${PROJECT_DESCRIPTION}, version ${PROJECT_VERSION}")
 message(
@@ -402,6 +404,10 @@ set(${PROJECT_NAME}_HEADERS
     include/crocoddyl/multibody/residuals/impulse-com.hxx
     include/crocoddyl/multibody/residuals/pair-collision.hpp
     include/crocoddyl/multibody/residuals/pair-collision.hxx
+    include/crocoddyl/multibody/residuals/obstacle-avoidance-sqr.hpp
+    include/crocoddyl/multibody/residuals/obstacle-avoidance-sqr.hxx
+    include/crocoddyl/multibody/residuals/obstacle-avoidance-exp.hpp
+    include/crocoddyl/multibody/residuals/obstacle-avoidance-exp.hxx
     include/crocoddyl/multibody/residuals/state.hpp
     include/crocoddyl/multibody/residuals/state.hxx
     include/crocoddyl/multibody/states/multibody.hpp
