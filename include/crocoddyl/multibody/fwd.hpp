@@ -173,6 +173,17 @@ template <typename Scalar>
 class ResidualModelPairCollisionTpl;
 template <typename Scalar>
 struct ResidualDataPairCollisionTpl;
+
+template <typename Scalar>
+class ResidualModelObstacleAvoidanceSqrTpl;
+template <typename Scalar>
+struct ResidualDataObstacleAvoidanceSqrTpl;
+
+template <typename Scalar>
+class ResidualModelObstacleAvoidanceExpTpl;
+template <typename Scalar>
+struct ResidualDataObstacleAvoidanceExpTpl;
+
 #endif
 
 // impulse
@@ -367,6 +378,10 @@ typedef ResidualDataStateTpl<double> ResidualDataState;
 #ifdef PINOCCHIO_WITH_HPP_FCL
 typedef ResidualModelPairCollisionTpl<double> ResidualModelPairCollision;
 typedef ResidualDataPairCollisionTpl<double> ResidualDataPairCollision;
+typedef ResidualModelObstacleAvoidanceSqrTpl<double> ResidualModelObstacleAvoidanceSqr;
+typedef ResidualDataObstacleAvoidanceSqrTpl<double> ResidualDataObstacleAvoidanceSqr;
+typedef ResidualModelObstacleAvoidanceExpTpl<double> ResidualModelObstacleAvoidanceExp;
+typedef ResidualDataObstacleAvoidanceExpTpl<double> ResidualDataObstacleAvoidanceExp;
 #endif
 
 typedef ImpulseModelAbstractTpl<double> ImpulseModelAbstract;
