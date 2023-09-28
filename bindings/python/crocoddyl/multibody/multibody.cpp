@@ -50,6 +50,8 @@ void exposeMultibody() {
 
 #ifdef PINOCCHIO_WITH_HPP_FCL
   exposeResidualPairCollision();
+  exposeResidualObstacleSqr();
+  exposeResidualObstacleExp();
 #endif
 
   exposeContact1D();
